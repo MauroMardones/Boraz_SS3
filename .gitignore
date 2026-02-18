@@ -1,0 +1,70 @@
+# R
+.Rhistory
+.RData
+.Rproj.user/
+*.Rproj
+
+# =========================
+# DATA → ignorar completamente
+# =========================
+data/
+
+# =========================
+# DOCS → solo permitir Boraz_SS3.Rmd
+# =========================
+docs/*
+!docs/
+!docs/Boraz_SS3.Rmd
+
+# =========================
+# CODE → solo permitir Boraz_SS3.R
+# =========================
+code/*
+!code/
+!code/Boraz_SS3.R
+
+
+# =========================
+# EXECUTABLE → subir carpeta vacía
+# =========================
+executable/*
+!executable/
+
+# =========================
+# FIGS → subir carpeta vacía
+# =========================
+figs/*
+!figs/
+
+# =========================
+# MODELS → ignorar todo
+# =========================
+models/*
+
+# Re-incluir solo carpetas específicas
+!models/Basecase_TVsel2018_Polyonly_h06_Mat5/
+!models/Basecase_TVsel2018_Polyonly_h06_Mat5-2024length/
+!models/Basecase_TVsel2018_Polyonly_h06_Mat5-2024length_newCPUEpoly/
+!models/Basemodel_newCPUEpoly_6years_raw/
+!models/Basemodel_newCPUEpoly_6years_ajus/
+!models/Basemodel_newCPUEpoly_ajus/
+!models/Basemodel_newCPUEpoly_raw/
+!models/Basemodel_newCPUEpoly_sel-blocks/
+!models/Basemodel_newCPUEpoly_catchability_TV/
+
+# Volver a ignorar su contenido
+models/Basecase_TVsel2018_Polyonly_h06_Mat5/*
+models/Basecase_TVsel2018_Polyonly_h06_Mat5-2024length/*
+models/Basecase_TVsel2018_Polyonly_h06_Mat5-2024length_newCPUEpoly/*
+models/Basemodel_newCPUEpoly_6years_raw/*
+models/Basemodel_newCPUEpoly_6years_ajus/*
+models/Basemodel_newCPUEpoly_ajus/*
+models/Basemodel_newCPUEpoly_raw/*
+models/Basemodel_newCPUEpoly_sel-blocks/*
+models/Basemodel_newCPUEpoly_catchability_TV/*
+
+# Permitir solo archivos núcleo SS3
+!models/**/forecast.ss
+!models/**/starter.ss
+!models/**/sbr_ctl.ss
+!models/**/sbr_dat.ss
