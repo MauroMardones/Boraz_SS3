@@ -34,7 +34,7 @@ library(tidyverse)
 #               "mvtnorm","kobe","plyr")
 # lapply(paquetes, require, character.only = TRUE)
 
-## Process Run Models
+## Process Run Models ---------
 # Firstly, the different model configurations were run using the Stock Synthesis executable. The following code chunk outlines the directory structure and execution commands used to run the models. 
 # Modelos J Gil  dont run
 # dir2 <- here("models", "Basecase_TVsel2018_Polyonly_h06_Mat5-2024length") # Benchmark  with 2024
@@ -51,7 +51,7 @@ exe_ss3 <- here("executable", "ss3_opt_osx_arm64")
 
 # debe devolver TRUE
 
-# # Run models
+## Run models---------
 # # Secondly, the models were executed in a loop to streamline the process.
 # # The following code chunk demonstrates how multiple model runs were automated.
 # 
@@ -90,9 +90,10 @@ for (dir in directorios) {
 
 # To call main outputs from each model for 
 # comparison and further analysis, 
-# the following code chunk demonstrates how to read the outputs using the `SS_output()` function. 
-#Leo las salidas del modelo seleccionado. 
 
+
+## Read outputs ---------
+# the following code chunk demonstrates how to read the outputs using the `SS_output()` function. 
 # model2 <- SS_output(dir=dir2,
 #                          covar=T,
 #                          forecast=T)
@@ -131,6 +132,8 @@ model9 <- SS_output(dir=dir9,
 #          minbthresh=0.20,
 #          forecast=T)
 
+
+## Read  SS3 files ---------
 # leo archivos para plotear y hacer tablas con "Basemodel"
 start1 <- SS_readstarter(file = file.path(dir2,
                                                "starter.ss"),
@@ -152,239 +155,7 @@ fore1 <- r4ss::SS_readforecast(file = file.path(dir2,
 # can also read in wtatage.ss for an empirical wt at age model using
 # r4ss::SS_readwtatage()
 
- parbio<-ctl1$MG_parms[1:10,c(1:3,7)]
- row.names( parbio)<-c("Nat M",
-                       "Lmin", 
-                       "Lmax",
-                       "VonBert K",
-                       "CV young",
-                       "CV old", 
-                       "Wt a", 
-                       "Wt b",
-                       "L50%", 
-                       "Mat slope")
-
- SRpar<-ctl1$SR_parms[1:5,c(1:3,7)]
- Qpar<-ctl1$Q_parms[1:2,c(1:3,7)]
- Selpar<-ctl1$size_selex_parms[1:4,c(1:3,7)]
- parInit<-rbind(parbio,SRpar,Qpar,Selpar)
-
-parInit %>%
-  kbl(booktabs = T,
-      format = "latex",
-      position="ht!",
-    caption = "Parameters to Goraz") %>%
-  kable_paper("hover", 
-              full_width = F)%>%
-  kable_styling(latex_options = c("striped",
-                                  "condensed"),
-                full_width = FALSE,
-                font_size=9)%>% 
-  pack_rows(index = c("Mortalidad natural" = 1,
-                        "Crecimiento"= 5,
-                        "Relación longitud-peso" = 2,
-                        "Ojiva de madurez"=2,
-                        "Relación stock-recluta"=5,
-                        "Capturabilidad"=2,
-                        "Selectividad"=4))
-
-
-SSplotData(model3, subplots = 2)
-
-get_lencomp <- function(dir, label) {
-  
-  start <- SS_readstarter(file = file.path(dir, "starter.ss"))
-  
-  # Leer data explícitamente
-  dat <- SS_readdat(
-    file = file.path(dir, start$datfile),
-    verbose = FALSE
-  )
-  
-  dat$lencomp %>%
-    mutate(Scenario = label) %>%
-    pivot_longer(
-      cols = starts_with("f"),
-      names_to = "LengthBin",
-      values_to = "Freq"
-    ) %>%
-    mutate(
-      LengthBin = as.numeric(gsub("f", "", LengthBin))
-    )
-}
-
-len_dir2  <- get_lencomp(dir2,  "Benchmark Model")
-len_dir6 <- get_lencomp(dir6, "Basemodel_newCPUEpoly_ajus")
-
-len_all <- bind_rows(len_dir2, len_dir6)
-
-len_plot <- len_all %>%
-  group_by(Scenario, year, LengthBin) %>%
-  summarise(Freq = mean(Freq, na.rm = TRUE), .groups = "drop")
-
-ggplot(len_plot,
-       aes(x = LengthBin, y = Freq, color = Scenario)) +
-  geom_line(linewidth = 1) +
-  facet_wrap(~ year, scales = "free_y") +
-  scale_color_manual(values = c("red", "black"))+
-  labs(x = "",
-       y = "Mean proportion",
-       color = "Scenario") +
-  theme_minimal()+
-  theme(legend.position = "bottom")
-
-
-knitr::include_graphics("../figs/cpue1.jpeg")
-
-df_catch <- data.frame(
-  Year  = dat1$catch$year,
-  Catch = dat1$catch$catch
-)
-
-# Filtrar años válidos y sumar por año
-df_sum <- df_catch %>%
-  filter(Year > 0) %>%
-  group_by(Year) %>%
-  summarise(Total_Catch = sum(Catch, na.rm = TRUE)) %>%
-  arrange(Year)
-
-# Gráfico de barras acumuladas por año
-ggplot(df_sum, aes(x = factor(Year), y = Total_Catch)) +
-  geom_bar(stat = "identity", fill = "steelblue") +
-  labs(x = "Year",
-       y = "Total Catch (t)",
-       title = "") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
-
-
-# old CPUE
-#dat1$CPUE$obs
-# new cpue
-datanew <- SS_readdat(file = file.path(dir5, start1$datfile),
-                        verbose = FALSE)
-
-# Crear data frame conjunto
-df_cpue <- data.frame(
-  Year = datanew$CPUE$year,
-  CPUE_new = datanew$CPUE$obs,
-  CPUE_old = dat1$CPUE$obs
-)
-
-# Pasar a formato largo
-df_long <- df_cpue %>%
-  tidyr::pivot_longer(
-    cols = c(CPUE_new, CPUE_old),
-    names_to = "Series",
-    values_to = "CPUE"
-  )
-
-# Renombrar para leyenda más limpia
-df_long$Series <- factor(df_long$Series,
-                         levels = c("CPUE_new", "CPUE_old"),
-                         labels = c("CPUE new", "CPUE old"))
-
-# Plot
-ggplot(df_long, aes(x = Year, y = CPUE, color = Series, fill = Series)) +
-  geom_point() +
-  geom_smooth(alpha = 0.2,
-              span=.8) +
-  scale_color_manual(values = c("red", "black")) +
-  scale_fill_manual(values = c("red", "black")) +
-  labs(x = "",
-       y = "CPUE (Kg/day fishing)",
-       color = "Index",
-       fill = "Index") +
-  theme_bw()+
-  theme(axis.text.x = element_text(angle = 90),
-        legend.position = "top")
-
-
-ss3_scenarios <- data.frame(
-  ScenarioID = paste0("S", 1:7),
-  Scenario = c(
-    "Benchmark Model",
-    "Benchmark_newCPUEpoly",
-    "Basemodel_newCPUEpoly_6years_raw",
-    "Basemodel_newCPUEpoly_6years_ajus",
-    "Basemodel_newCPUEpoly_ajus",
-    "Basemodel_newCPUEpoly_raw",
-    "Basemodel_newCPUEpoly_sel-blocks"
-  ),
-  Description = c(
-    "Benchmark configuration derived from the model benchmarking process, including the original polyvalent CPUE index and the observed length compositions for both the polyvalent and trawl fleets.",
-    "Benchmark with new CPUE",
-    "Scenario including the revised polyvalent CPUE index and six years of empirical length–frequency data for the polyvalent fleet.",
-    "Scenario including the revised polyvalent CPUE index and six years of length–frequency data fitted using theoretical length distribution estimation for the polyvalent fleet.",
-    "Same as S3, but extended to the full estimated length time series for the polyvalent fleet from 2009 to 2024.",
-     "Same as S3, but extended to the full empirical length time series for the polyvalent fleet from 2009 to 2024.",
-    "Scenario including time blocks in selectivity based on changes in the minimum legal size, specifically the increase to 33 cm implemented in 2019."
-    ),
-  stringsAsFactors = FALSE
-)
-
-kable(
-  ss3_scenarios,
-  format = "latex",
-  booktabs = TRUE,
-  caption = "Summary of Stock Synthesis (SS3) model scenarios and their main structural assumptions."
-) %>%
-  kable_styling(
-    latex_options = c("repeat_header"),
-    font_size = 8
-  ) %>%
-  column_spec(1, width = "1cm") %>%
-  column_spec(2, width = "5cm") %>%
-  column_spec(3, width = "11cm") %>%
-  collapse_rows(columns = 1:2, valign = "top", latex_hline = "major")
-
-get_ss_timeseries <- function(dir, label) {
-
-  replist <- SS_output(dir = dir, verbose = FALSE, printstats = FALSE)
-
-  years <- seq(1989, 2024, 1)
-
-  ssb  <- replist$derived_quants[3:38,  "Value"]
-  recr <- replist$derived_quants[44:79, "Value"]
-  ft   <- replist$derived_quants[122:157, "Value"]
-
-  data.frame(
-    Year        = years,
-    Recruitment = round(as.numeric(recr), 2),
-    SSB         = round(as.numeric(ssb), 2),
-    F           = round(as.numeric(ft), 2),
-    Scenario    = label
-  )
-}
-
-data_dir3 <- get_ss_timeseries(dir = dir3, label = "Benchmark")
-data_dir4 <- get_ss_timeseries(dir = dir4, label = "S4")
-
-data_dir3 <- subset(data_dir3, select = -Scenario)
-data_dir4 <- subset(data_dir4, select = -Scenario)
-
-data_wide <- merge(
-  data_dir3,
-  data_dir4,
-  by = "Year",
-  suffixes = c("_SBenchmark", "_S4")
-)
-
-
-
-
-data_wide %>%
-  kbl(
-    format = "latex",
-    booktabs = TRUE,
-    caption = "Comparison of estimated time series between the Benchmark Model and Scenario S4.",
-    align = "c"
-  ) %>%
-  kable_styling(
-    latex_options = c("striped", "condensed", "repeat_header", "hold_position"),
-    font_size = 9
-  )
-
+## Comparisions plots ------
 
 # Labels for model runs
 legend.labels <- c(
@@ -417,12 +188,6 @@ SSplotComparisons(
   png = FALSE,   # CRÍTICO
   plotdir = fig_path
 )
-
-knitr::include_graphics("../figs/compare2_spawnbio_uncertainty.png")
-
-knitr::include_graphics("../figs/compare8_Fvalue_uncertainty.png")
-
-knitr::include_graphics("../figs/compare4_Bratio_uncertainty.png")
 
 # comtable <- SStableComparisons(summaryoutput,
 #                    likenames = c("TOTAL",
@@ -526,27 +291,29 @@ mtext("G", side = 3, adj = 0, line = 0.2, cex = 0.8, font = 2)
 # #       extras = "-nox",
 # #       skipfinished = F)
 # 
-# # all retro run
-# directorios <- c(dir2,
-#                  dir3,
-#                  dir3.b,
-#                  dir4,
-#                  dir5,
-#                  dir6,
-#                  dir7,
-#                  dir8)
-# for (dir in directorios) {
-#   retro(
-#     dir = dir,
-#     oldsubdir = "",
-#     newsubdir = "Retrospective",
-#     years = 0:-5,
-#     exe = exe_ss3,
-#     extras = "-nox",
-#     skipfinished = FALSE
-#   )
-# }
-# 
+
+## Run Retro--------------
+# all retro run
+directorios <- c(dir2,
+                 dir3,
+                 dir3.b,
+                 dir4,
+                 dir5,
+                 dir6,
+                 dir7,
+                 dir8)
+for (dir in directorios) {
+  retro(
+    dir = dir,
+    oldsubdir = "",
+    newsubdir = "Retrospective",
+    years = 0:-5,
+    exe = exe_ss3,
+    extras = "-nox",
+    skipfinished = FALSE
+  )
+}
+
 
 # # s1
 # retroModels1 <- SSgetoutput(dirvec=file.path(dir1,
@@ -713,70 +480,41 @@ tablebias3 <- SShcbias(retroSummary3,quant="SSB",verbose=F)
 tablebias3b <- SShcbias(retroSummary3,quant="F",verbose=F)
 table3 <- rbind(tablebias3, tablebias3b)
 
-kbl(table3, booktabs = T,format = "latex",
-    caption = "Rho parameter in SSB  and F model Benchmark")  %>% 
-    kable_styling(latex_options = "hold_position",
-                  font_size = 8)
 
 # model3b
 tablebias3b <- SShcbias(retroSummary3b,quant="SSB",verbose=F)
 tablebias3b2 <- SShcbias(retroSummary3b,quant="F",verbose=F)
 table3b <- rbind(tablebias3b, tablebias3b2)
 
-kbl(table3b, booktabs = T,format = "latex",
-    caption = "\\label{mod3}Rho parameter in SSB  and F model S2")  %>% 
-    kable_styling(latex_options = "hold_position",
-                  font_size = 8)
 
 # model4
 tablebias4 <- SShcbias(retroSummary4,quant="SSB",verbose=F)
 tablebias4b <- SShcbias(retroSummary4,quant="F",verbose=F)
 table4 <- rbind(tablebias4, tablebias4b)
 
-kbl(table4, booktabs = T,format = "latex",
-    caption = "\\label{mod4}Rho parameter in SSB  and F model S3")  %>% 
-    kable_styling(latex_options = "hold_position",
-                  font_size = 8)
-
 # model5
 tablebias5 <- SShcbias(retroSummary5,quant="SSB",verbose=F)
 tablebias5b <- SShcbias(retroSummary5,quant="F",verbose=F)
 table5 <- rbind(tablebias5, tablebias5b)
 
-kbl(table5, booktabs = T,format = "latex",
-    caption = "\\label{mod5}Rho parameter in SSB  and F model S4")  %>% 
-    kable_styling(latex_options = "hold_position",
-                  font_size = 8)
 
 # model6
 tablebias6 <- SShcbias(retroSummary6,quant="SSB",verbose=F)
 tablebias6b <- SShcbias(retroSummary6,quant="F",verbose=F)
 table6 <- rbind(tablebias6, tablebias6b)
 
-kbl(table6, booktabs = T,format = "latex",
-    caption = "\\label{mod6}Rho parameter in SSB  and F model S5")  %>% 
-    kable_styling(latex_options = "hold_position",
-                  font_size = 8)
 
 # model7
 tablebias7 <- SShcbias(retroSummary7,quant="SSB",verbose=F)
 tablebias7b <- SShcbias(retroSummary7,quant="F",verbose=F)
 table7 <- rbind(tablebias7, tablebias7b)
 
-kbl(table7, booktabs = T,format = "latex",
-    caption = "\\label{mod7}Rho parameter in SSB  and F model S6")  %>% 
-    kable_styling(latex_options = "hold_position",
-                  font_size = 8)
 
 # model8
 tablebias8 <- SShcbias(retroSummary8,quant="SSB",verbose=F)
 tablebias8b <- SShcbias(retroSummary8,quant="F",verbose=F)
 table8 <- rbind(tablebias8, tablebias8b)
 
-kbl(table8, booktabs = T,format = "latex",
-    caption = "\\label{mod8}Rho parameter in SSB  and F model S7")  %>% 
-    kable_styling(latex_options = "hold_position",
-                  font_size = 8)
 
 
 par(mfrow=c(2,4), mar=c(5,1,1,1))
@@ -842,24 +580,27 @@ hcl8 = SSplotHCxval(retroSummary8,
                    indexselect = 1)
 mtext("", side = 3, adj = 0, line = 0.2, cex = 0.8, font = 2)
 
+
+
+### Likelihood profile for steepness (not implemented yet, but code chunk is here for future reference)
 # # Definir directorios base y de perfil
 # prof4 <- here("models",
 #               "Basemodel_newCPUEpoly",
 #               "likeprofile")
 # dir.create(prof4, showWarnings = FALSE)
 # 
-# # ---- Directorio del modelo base ----
+# # Directorio del modelo base 
 # dirname.model.run <- dir5
 # 
-# # ---- Directorio del perfil de verosimilitud ----
+# #  Directorio del perfil de verosimilitud 
 # dirname.likeprof <- file.path(dirname.model.run, "likeprof")
 # dir.create(dirname.likeprof, showWarnings = FALSE, recursive = TRUE)
 # 
-# # ---- Subdirectorio para plots ----
+# # ---- Subdirectorio para plots 
 # plotdir <- file.path(dirname.likeprof, "plots_likelihood")
 # dir.create(plotdir, showWarnings = FALSE, recursive = TRUE)
 # 
-# # ---- Subdirectorio "simple" (modelo base limpio) ----
+# # ---- Subdirectorio "simple" (modelo base limpio) 
 # reference.dir <- file.path(dirname.likeprof, "simple")
 # dir.create(reference.dir, showWarnings = FALSE, recursive = TRUE)
 # 
@@ -1009,6 +750,9 @@ mtext("", side = 3, adj = 0, line = 0.2, cex = 0.8, font = 2)
 #   getcovar = FALSE
 # )
 
+
+## Kobe plots ----------
+
 par(mfrow=c(2,4), mar=c(5,1,1,1))
 # mvln_2 <- SSdeltaMVLN(model2,
 #                      Fref = "MSY",
@@ -1073,6 +817,9 @@ mvln_8 <- SSdeltaMVLN(model8,
                      virgin = TRUE,
                      mc = 100)
 mtext("G", side = 3, adj = 0, line = 0.2, cex = 0.8, font = 2)
+
+
+## Diagnostics ----------
 
 # Modelo 3
 diag3 <- data.frame(
@@ -1227,19 +974,4 @@ diag_tidy[, -1] <- lapply(
 )
 
 
-diag_tidy %>%
-  kbl(
-    format = "latex",
-    booktabs = TRUE,
-    digits = 3,
-    caption = "Model Diagnosis Results",
-    align = "c"
-  ) %>%
-  kable_styling(
-    latex_options = c("repeat_header"),
-    full_width = TRUE,
-    position = "center",
-    font_size = 9
-  ) %>%
-  row_spec(0, bold = TRUE)
 

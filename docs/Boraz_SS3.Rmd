@@ -419,23 +419,34 @@ Total annual catches show a marked temporal variability over the assessment peri
 ```{r totalcatch, fig.cap="Total Annual Catch (all fleets combined)", out.width='75%'}
 df_catch <- data.frame(
   Year  = dat1$catch$year,
-  Catch = dat1$catch$catch
+  Catch = dat1$catch$catch,
+  Fleet = dat1$catch$fleet
 )
 
-# Filtrar años válidos y sumar por año
+# Etiquetas de flota
+fleet_labels <- c(
+  "1" = "trawl_pt",
+  "2" = "polyvalent_pt",
+  "3" = "trawl_sp",
+  "4" = "polyvalent_sp"
+)
+
 df_sum <- df_catch %>%
   filter(Year > 0) %>%
-  group_by(Year) %>%
-  summarise(Total_Catch = sum(Catch, na.rm = TRUE)) %>%
+  mutate(Fleet = factor(Fleet, levels = 1:4, labels = fleet_labels)) %>%
+  group_by(Year, Fleet) %>%
+  summarise(Total_Catch = sum(Catch, na.rm = TRUE), .groups = "drop") %>%
   arrange(Year)
 
-# Gráfico de barras acumuladas por año
-ggplot(df_sum, aes(x = factor(Year), y = Total_Catch)) +
-  geom_bar(stat = "identity", fill = "steelblue") +
-  labs(x = "Year",
-       y = "Total Catch (t)",
-       title = "") +
-  theme_minimal() +
+ggplot(df_sum, aes(x = factor(Year), y = Total_Catch, fill = Fleet)) +
+  geom_bar(stat = "identity") +
+  labs(
+    x = "",
+    y = "Total Catch (t)",
+    fill = "Fleet"
+  ) +
+  scale_fill_viridis_d() +
+  theme_bw() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
 
 ```
@@ -1590,13 +1601,103 @@ diag_tidy %>%
 
 \newpage
 
+### Perfomance analysis
+
+1. Convergence
+
+Best:
+
+S4 = 0.000
+
+S5 = 0.000
+
+Concern:
+
+S7 = 0.034 (relatively high)
+
+2. AIC (key selection metric)
+
+From lowest (best) to highest:
+
+S4 = 363.841 - best
+
+S3 = 395.506
+
+S5 = 415.099
+
+S7 = 641.124
+
+S6 = 709.688
+
+Benchmark = 1167.608
+
+S2 = 1291.086
+
+Structurally, S4, S3, and S5 clearly outperform the others.
+
+3. Length composition fit (Length_comp_like)
+
+Lower is better:
+
+S4 = 18.326 - best
+
+S5 = 28.539
+
+S3 = 34.766
+
+All substantially better than the remaining models.
+
+4. RMSE (length)
+
+S5 = 1.5  (best)
+
+S3 = 2.4
+
+S4 = 2.6
+
+All within an acceptable range.
+
+5. Retrospective pattern (Retro_Rho_ssb)
+
+Ideal: close to zero
+
+S4 = 0.017 - very stable
+
+S3 = −0.023
+
+S5 = −0.036
+
+All show negligible retrospective bias.
+
+S7 shows a strong retrospective pattern (0.691), which is problematic.
+
+Technical Conclusion
+
+The best-performing models are:
+
+1) S4 – Basemodel_newCPUEpoly_6years_ajus
+
+Lowest AIC, best length-composition fit, perfect convergence, and stable retrospective diagnostics.
+Statistically, this is the strongest model.
+
+2) S3 – Basemodel_newCPUEpoly_6years_raw
+
+Competitive AIC and solid diagnostic performance.
+
+3) S5 – Basemodel_newCPUEpoly_ajus
+
+Slightly higher AIC but excellent length RMSE and stable behavior.
+
+\newpage
+
 ## Discussion
 
-The evaluation of alternative scenarios (Models 4 to 7) provides insight into the sensitivity of the assessment to data inputs and CPUE standardization choices. Based on the performance metrics summarized in Table \@ref(tab:likecom), several general patterns can be identified. All evaluated scenarios exhibit acceptable convergence, indicating numerical stability across configurations. Scenarios incorporating longer time series of length composition data (Models 6 and 7) tend to provide a more internally consistent representation of population structure compared to scenarios based on shorter, 6-year subsets, although differences among models remain moderate.
+The evaluation of alternative scenarios (Models 2 to 7) provides insight into the sensitivity of the assessment to data inputs and CPUE standardization choices. Based on the performance metrics summarized in Table \@ref(tab:likecom), several general patterns can be identified. All evaluated scenarios exhibit acceptable convergence, indicating numerical stability across configurations. Scenarios incorporating longer time series of length composition data (Models 6 and 7) tend to provide a more internally consistent representation of population structure compared to scenarios based on shorter, 6-year subsets, although differences among models remain moderate.
 
-In terms of statistical fit, Model 7 (`Basemodel_newCPUEpoly_raw_sel_blocks`) shows a competitive total likelihood and comparatively improved RMSE values for length compositions. MASE values across scenarios remain below 1, suggesting some degree of predictive skill relative to a naïve benchmark; however, the similarity of MASE scores among models indicates that differences in predictive performance are limited, particularly for the polyvalent fleet CPUE index. This highlights ongoing challenges in capturing the variability of this index, rather than clear dominance of a single model configuration.
 
-Retrospective diagnostics indicate that the introduction of the revised CPUE index (Models 4–7) results in modest changes in Mohn’s rho values. These shifts remain within commonly accepted ranges for a species with the life-history characteristics of *Pagellus bogaraveo*, although differences in the magnitude and direction of retrospective bias across scenarios warrant continued attention when interpreting stock status.
+Retrospective diagnostics indicate that the introduction of the revised CPUE index (Models 2–7) results in modest changes in Mohn’s rho values. These shifts remain within commonly accepted ranges for a species with the life-history characteristics of *Pagellus bogaraveo*, although differences in the magnitude and direction of retrospective bias across scenarios warrant continued attention when interpreting stock status.
+
+If the goal is to define the operational base model, the Benchmark should not be selected. If the goal is to maintain a reference model for transparency and comparison, it should remain documented but clearly justified as statistically inferior. 
 
 Overall, the retrospective patterns suggest that the assessed model configurations produce broadly consistent estimates of spawning stock biomass over time, without evidence of pronounced retrospective instability. Nevertheless, differences among scenarios in retrospective behavior and fit metrics indicate that model outcomes remain sensitive to both data selection and structural assumptions. Consequently, Models 6 and 7 may be considered useful reference configurations at this stage due to their more comprehensive data inputs, but they should not yet be regarded as definitive.
 
