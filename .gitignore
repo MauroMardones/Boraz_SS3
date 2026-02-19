@@ -2,7 +2,7 @@
 .Rhistory
 .RData
 .Rproj.user/
-*.Rproj
+.Rproj
 
 # =========================
 # DATA → ignorar completamente
@@ -28,6 +28,7 @@ code/*
 # EXECUTABLE → subir carpeta vacía
 # =========================
 executable/*
+!executable/
 !executable/
 
 # =========================
