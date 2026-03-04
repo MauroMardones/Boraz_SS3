@@ -29,7 +29,6 @@ code/*
 # =========================
 executable/*
 !executable/
-!executable/
 
 # =========================
 # FIGS → subir carpeta vacía
@@ -52,6 +51,8 @@ models/*
 !models/Basemodel_newCPUEpoly_raw/
 !models/Basemodel_newCPUEpoly_sel-blocks/
 !models/Basemodel_newCPUEpoly_catchability_TV/
+!models/Basecase_TVsel2018_Polyonly_h06_Mat5-2024length_newCPUEpoly_0.2/
+!models/Basecase_TVsel2018_Polyonly_h06_Mat5-2024length_newCPUEpoly2000/
 
 # Volver a ignorar su contenido
 models/Basecase_TVsel2018_Polyonly_h06_Mat5/*
@@ -63,6 +64,8 @@ models/Basemodel_newCPUEpoly_ajus/*
 models/Basemodel_newCPUEpoly_raw/*
 models/Basemodel_newCPUEpoly_sel-blocks/*
 models/Basemodel_newCPUEpoly_catchability_TV/*
+models/Basecase_TVsel2018_Polyonly_h06_Mat5-2024length_newCPUEpoly_0.2/*
+models/Basecase_TVsel2018_Polyonly_h06_Mat5-2024length_newCPUEpoly2000/*
 
 # Permitir solo archivos núcleo SS3
 !models/**/forecast.ss

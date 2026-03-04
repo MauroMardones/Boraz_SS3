@@ -184,7 +184,8 @@ dir5 <- here("models", "Basemodel_newCPUEpoly_6years_ajus")
 dir6 <- here("models", "Basemodel_newCPUEpoly_ajus")
 dir7 <- here("models", "Basemodel_newCPUEpoly_raw")
 dir8 <- here("models", "Basemodel_newCPUEpoly_sel-blocks")
-dir9 <- here("models", "Basemodel_newCPUEpoly_catchability_TV")
+dir9 <- here("models", "Basecase_TVsel2018_Polyonly_h06_Mat5-2024length_newCPUEpoly_0.2")
+dir10 <- here("models", "Basecase_TVsel2018_Polyonly_h06_Mat5-2024length_newCPUEpoly2000")
 fig_path<-here("figs")
 exe_ss3 <- here("executable", "ss3_opt_osx_arm64")
 
@@ -223,12 +224,12 @@ for (dir in directorios) {
 # Considerar que al correr el modelo dentro de cada `chunk` se cambia el directorio.
 
 # # Corro escenario por separado
-# r4ss::run(
-#   dir = dir8,
-#   exe = "../../executable/ss3_opt_osx_arm64",
-#   skipfinished = FALSE,
-#   show_in_console = TRUE
-# )
+r4ss::run(
+  dir = dir10,
+  exe = "../../executable/ss3_opt_osx_arm64",
+  skipfinished = FALSE,
+  show_in_console = TRUE
+)
 ```
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
@@ -266,16 +267,19 @@ model8 <- SS_output(dir=dir8,
 model9 <- SS_output(dir=dir9,
                          covar=T,
                          forecast=T)
+model10 <- SS_output(dir=dir10,
+                         covar=T,
+                         forecast=T)
 # 
 # # #Option para sacar HTML
-# SS_plots(model8,
-#          uncertainty=T,
-#          datplot = T,
-#          png=T,
-#          aalresids = F,
-#          btarg=0.40,
-#          minbthresh=0.20,
-#          forecast=T)
+SS_plots(model10,
+         uncertainty=T,
+         datplot = T,
+         png=T,
+         aalresids = F,
+         btarg=0.40,
+         minbthresh=0.20,
+         forecast=T)
 ```
 
 Pagelus Base Model life history and fisheries parameters set is used to illustrate the data structure and parameter settings. The main parametrers used in the model are summarised in Table \@ref(tab:ss3parameters2).
@@ -633,7 +637,7 @@ Comparative analyses based exclusively on cross-referenced comparison plots pres
 # Labels for model runs
 legend.labels <- c(
   "Benchmark Model",
-   "S2","S3", "S4", "S5", "S6", "S7"
+   "S2","S3", "S4", "S5", "S6", "S7", "S8", "S9"
 )
 
 # Read model outputs
@@ -645,7 +649,9 @@ biglist <- SSgetoutput(
     dir5,
     dir6,
     dir7,
-    dir8
+    dir8,
+    dir9,
+    dir10
   ),
   getcovar = FALSE
 )
